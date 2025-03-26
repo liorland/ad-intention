@@ -195,121 +195,97 @@ def main():
     # Sentiment analysis (second option)
     options["use_sentiment"] = st.sidebar.checkbox("Use Sentiment Analysis", value=True)
     
-    # Only show sentiment options if sentiment analysis is enabled
+    # Show sentiment analyzer options when sentiment analysis is enabled
     if options["use_sentiment"]:
-        sentiment_options = st.sidebar.expander("Sentiment Analysis Options")
-        with sentiment_options:
-            st.markdown("**Select Sentiment Analyzers:**")
-            options["use_vader"] = st.checkbox("Use VADER", value=True, 
-                                              help="VADER (Valence Aware Dictionary and sEntiment Reasoner) sentiment analysis")
-            options["use_textblob"] = st.checkbox("Use TextBlob", value=True,
-                                                 help="TextBlob sentiment analysis")
+        # Create columns for sentiment options to save space
+        sent_col1, sent_col2 = st.sidebar.columns(2)
+        
+        with sent_col1:
+            options["use_vader"] = st.checkbox("VADER", value=True, help="VADER sentiment analyzer")
+            options["use_textblob"] = st.checkbox("TextBlob", value=True, help="TextBlob sentiment analyzer")
+        
+        with sent_col2:
+            options["use_lexicon"] = st.checkbox("Lexicon", value=True, help="Lexicon-based analyzer")
+        
+        # Sentiment weight applies to the combined sentiment analysis
+        options["sentiment_weight"] = st.sidebar.slider(
+            "Sentiment Weight", min_value=0.1, max_value=5.0, value=1.0, step=0.1
+        )
+        
+        # Individual sentiment analyzer weights
+        with st.sidebar.expander("Sentiment Analyzer Weights"):
+            options["vader_weight"] = st.slider("VADER Weight", 0.1, 5.0, 1.0, 0.1)
+            options["textblob_weight"] = st.slider("TextBlob Weight", 0.1, 5.0, 0.8, 0.1)
+            options["lexicon_weight"] = st.slider("Lexicon Weight", 0.1, 5.0, 2.0, 0.1)
             
-            # Add Lexicon option
-            options["use_lexicon"] = st.checkbox("Use Lexicon", value=True,
-                                               help="Lexicon-based sentiment analysis using predefined word lists")
-            
-            # Validate that at least one analyzer is selected
-            if not (options["use_vader"] or options["use_textblob"] or options["use_lexicon"]):
-                st.warning("⚠️ Please select at least one sentiment analyzer")
-                # Default to VADER if none selected
-                options["use_vader"] = True
-                
-            # Always enable separate sentiment results by default (hidden from user)
-            options["separate_sentiment"] = True
+        # Option to show separate sentiment results
+        options["separate_sentiment"] = True
+        
     else:
+        # Set default values when sentiment analysis is disabled
         options["use_vader"] = False
         options["use_textblob"] = False
         options["use_lexicon"] = False
-        options["separate_sentiment"] = True  # Always enable separate sentiment results even if sentiment is disabled
-    
-    # BERT (third option)
-    options["use_bert"] = st.sidebar.checkbox("Use BERT (Requires GPU - Future Enhancement)", value=False,
-                                           help="Uses pre-trained transformer model without additional training")
-    
-    # Gemini (fourth option)
-    options["use_gemini"] = st.sidebar.checkbox("Use Gemini LLM Classification", value=False,
-                                             help="Uses Google's Gemini LLM for classification")
-    
-    # Judge (as an additional option) - but without configuration
-    options["use_openai_judge"] = st.sidebar.checkbox("Use OpenAI Judge", value=False,
-                                                   help="Get explanations for classification decisions (uses default configuration)")
-    
-    # Classifier weights
-    weights = st.sidebar.expander("Classifier Weights")
-    with weights:
-        if options["use_rule_based"]:
-            options["rules_weight"] = st.slider(
-                "Rule-based Weight", 
-                0.1, 5.0, 2.0, 0.1,
-                help="Weight for rule-based classifier (higher = more influence)"
-            )
-        else:
-            options["rules_weight"] = 0.0
-            
-        if options["use_sentiment"]:
-            options["sentiment_weight"] = st.slider(
-                "Sentiment Weight", 
-                0.1, 5.0, 1.0, 0.1,
-                help="Weight for sentiment analysis classifier (higher = more influence)"
-            )
-        else:
-            options["sentiment_weight"] = 0.0
-        
-        if options["use_bert"]:
-            options["bert_weight"] = st.slider(
-                "BERT Weight", 
-                0.1, 5.0, 1.0, 0.1,
-                help="Weight for BERT zero-shot classifier (higher = more influence)"
-            )
-        else:
-            options["bert_weight"] = 0.0
-        
-        if options["use_gemini"]:
-            options["gemini_weight"] = st.slider(
-                "Gemini Weight", 
-                0.1, 5.0, 1.5, 0.1,
-                help="Weight for Gemini LLM classifier (higher = more influence)"
-            )
-        else:
-            options["gemini_weight"] = 0.0
-    
-    # Sentiment component weights in sidebar directly (not nested in an expander)
-    if options["use_sentiment"]:
-        st.sidebar.markdown("### Sentiment Component Weights")
-        st.sidebar.info("These weights are used for UI visualization. The classifier uses the overall sentiment weight above.")
-        if options["use_vader"]:
-            options["vader_weight"] = st.sidebar.slider(
-                "VADER Weight", 
-                0.1, 5.0, 1.0, 0.1,
-                help="Weight for VADER sentiment analysis (higher = more influence)"
-            )
-        else:
-            options["vader_weight"] = 0.0
-            
-        if options["use_textblob"]:
-            options["textblob_weight"] = st.sidebar.slider(
-                "TextBlob Weight", 
-                0.1, 5.0, 0.8, 0.1,
-                help="Weight for TextBlob sentiment analysis (higher = more influence)"
-            )
-        else:
-            options["textblob_weight"] = 0.0
-            
-        # Add back lexicon weight slider
-        if options["use_lexicon"]:
-            options["lexicon_weight"] = st.sidebar.slider(
-                "Lexicon Weight", 
-                0.1, 5.0, 2.0, 0.1,
-                help="Weight for lexicon-based analysis (higher = more influence)"
-            )
-        else:
-            options["lexicon_weight"] = 0.0
-    else:
-        # Set default values even if not displayed
+        options["sentiment_weight"] = 0.0
         options["vader_weight"] = 0.0
         options["textblob_weight"] = 0.0
         options["lexicon_weight"] = 0.0
+        options["separate_sentiment"] = True
+    
+    # BERT classifier option
+    bert_selected = st.sidebar.checkbox("Use BERT Classification", value=False, 
+                                      help="Uses BERT-based NLP model (higher accuracy but slower)")
+    if bert_selected:
+        st.sidebar.error("⚠️ BERT Classification requires permission. Please ask Lior for access.")
+        options["use_bert"] = False
+    else:
+        options["use_bert"] = False
+    options["bert_weight"] = 0.0
+    
+    # Input method selection before Gemini and OpenAI options
+    input_method = st.radio("Choose input method:", ["Enter URLs", "Upload CSV File"])
+    
+    # Store current input method in session state
+    st.session_state.input_method = input_method
+    
+    # Only show these options if using direct URL input, otherwise disable them for CSV
+    if input_method != "Upload CSV File":
+        # Gemini classifier option
+        gemini_selected = st.sidebar.checkbox("Use Gemini Classification", value=False, 
+                                            help="Uses Google's Gemini model for classification")
+        if gemini_selected:
+            st.sidebar.error("⚠️ Gemini Classification requires permission. Please ask Lior for access.")
+            options["use_gemini"] = False
+        else:
+            options["use_gemini"] = False
+        options["gemini_weight"] = 0.0
+            
+        # OpenAI judge option
+        openai_selected = st.sidebar.checkbox("Use OpenAI Judge", value=False, 
+                                            help="Adds GPT-4o classifier and evaluation")
+        if openai_selected:
+            st.sidebar.error("⚠️ OpenAI Judge requires permission. Please ask Lior for access.")
+            options["use_openai_judge"] = False
+        else:
+            options["use_openai_judge"] = False
+    else:
+        # Disable Gemini and OpenAI options for CSV upload but keep them visible in UI
+        options["use_gemini"] = False
+        options["use_openai_judge"] = False
+        options["gemini_weight"] = 0.0
+        
+        # Show disabled options to inform the user
+        st.sidebar.markdown("### Disabled for CSV Upload")
+        st.sidebar.warning("These advanced classifiers require permission from Lior and are not available for CSV uploads.")
+        st.sidebar.checkbox("Use Gemini Classification", value=False, disabled=True, 
+                         help="Requires permission from Lior and not available for CSV upload")
+        st.sidebar.checkbox("Use OpenAI Judge", value=False, disabled=True,
+                         help="Requires permission from Lior and not available for CSV upload")
+    
+    # Rule-based weight is always available
+    options["rules_weight"] = st.sidebar.slider(
+        "Rule-based Weight", min_value=0.1, max_value=5.0, value=2.0, step=0.1
+    )
     
     # Thresholds and other settings
     advanced = st.sidebar.expander("Advanced Settings")
@@ -328,17 +304,29 @@ def main():
     options["judge_format"] = "natural"
     options["judge_threshold"] = 0.3
     
-    # Input method selection
-    input_method = st.radio("Choose input method:", ["Enter URLs", "Upload CSV File"])
-    
-    # Store current input method in session state
-    st.session_state.input_method = input_method
+    # Modify options based on input method
+    if input_method == "Upload CSV File":
+        # Disable Gemini and OpenAI options for CSV upload but keep them visible
+        if options["use_gemini"]:
+            options["use_gemini"] = False
+            st.warning("Gemini classifier requires permission from Lior and is not available for CSV uploads.")
+            
+        if options["use_openai_judge"]:
+            options["use_openai_judge"] = False
+            st.warning("OpenAI judge requires permission from Lior and is not available for CSV uploads.")
+            
+        # We're now handling these in the sidebar section above
+        # st.sidebar.markdown("### Disabled for CSV Upload")
+        # st.sidebar.checkbox("Use Gemini Classification", value=False, disabled=True, 
+        #                   help="Disabled for CSV upload to prevent crashes")
+        # st.sidebar.checkbox("Use OpenAI Judge", value=False, disabled=True,
+        #                   help="Disabled for CSV upload to prevent crashes")
     
     # Store options in session state
     st.session_state.options = options.copy()
     
     # Initialize results variable
-    results = st.session_state.results  # Retrieve from session state if available
+    results = st.session_state.results
     
     # Process new classification requests
     if input_method == "Enter URLs":
@@ -426,14 +414,40 @@ def main():
                     if "judge_explanation" in results.columns:
                         basic_cols.append("judge_explanation")
             else:
-                # For direct URL input, use original column set
-                basic_cols = ["url", "classification", "confidence"]
+                # For direct URL input, use same column format as CSV for consistency
+                basic_cols = ["url", "classification"]
                 
-                # Add judge columns if available
-                if "judge_class" in results.columns:
-                    basic_cols.extend(["judge_class", "judge_confidence"])
+                # Add classifier columns based on which classifiers are enabled AND available in results
+                if st.session_state.options.get("use_rule_based", False) and "rule_based_class" in results.columns:
+                    basic_cols.append("rule_based_class")
+                    
+                if st.session_state.options.get("use_sentiment", False):
+                    if "sentiment_class" in results.columns:
+                        basic_cols.append("sentiment_class")
+                    if st.session_state.options.get("use_vader", False) and "vader_class" in results.columns:
+                        basic_cols.append("vader_class")
+                    if st.session_state.options.get("use_textblob", False) and "textblob_class" in results.columns:
+                        basic_cols.append("textblob_class")
+                    if st.session_state.options.get("use_lexicon", False) and "lexicon_class" in results.columns:
+                        basic_cols.append("lexicon_class")
+                        
+                if st.session_state.options.get("use_bert", False) and "bert_class" in results.columns:
+                    basic_cols.append("bert_class")
+                    
+                if st.session_state.options.get("use_gemini", False) and "gemini_class" in results.columns:
+                    basic_cols.append("gemini_class")
+                    
+                if st.session_state.options.get("use_openai_judge", False):
+                    if "judge_class" in results.columns:
+                        basic_cols.append("judge_class")
+                    if "judge_explanation" in results.columns:
+                        basic_cols.append("judge_explanation")
                 
-                # Add token usage if available
+                # Add confidence to basic columns for all input methods
+                if "confidence" in results.columns:
+                    basic_cols.append("confidence")
+                
+                # Add token usage if available (usually only for direct URL input)
                 if "openai_total_tokens" in results.columns:
                     basic_cols.extend(["openai_total_tokens", "openai_cost"])
                 if "gemini_total_tokens" in results.columns:
@@ -682,9 +696,9 @@ def main():
     # Add a disclaimer about API keys
     st.sidebar.markdown("---")
     st.sidebar.info("""
-    **API Keys Information**  
-    This application uses pre-configured API keys for OpenAI and Google Gemini.
-    No additional setup is required to use these features.
+    **Advanced Classifiers Information**  
+    BERT, Gemini, and OpenAI classifiers require special permission from Lior.
+    Please reach out to request access to these features.
     """)
 
 if __name__ == "__main__":
