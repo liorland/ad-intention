@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=42.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ad-intention"
+version = "0.1.0"
+description = "Ad Intention Classification System for categorizing ad landing pages"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "AdClarity Team"}
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pandas>=1.5.0",
+    "requests>=2.28.0",
+    "tqdm>=4.65.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+]
+
+[project.optional-dependencies]
+ai = [
+    "transformers>=4.30.0",
+    "torch>=1.13.0",
+    "nltk>=3.8.0",
+    "textblob>=0.17.1",
+    "openai>=1.0.0",
+    "google-generativeai>=0.2.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "flake8>=6.0.0",
+]
+viz = [
+    "matplotlib>=3.6.0",
+    "seaborn>=0.12.0",
+    "plotly>=5.14.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/your-org/ad-intention"
+"Bug Tracker" = "https://github.com/your-org/ad-intention/issues"
+
+[tool.black]
+line-length = 100
+target-version = ["py39"]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.pytest]
+testpaths = ["tests"]
+python_files = "test_*.py" 

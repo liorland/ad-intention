@@ -1,0 +1,68 @@
+# Environment files
+.env
+.venv
+env/
+venv/
+ENV/
+ad_intention_venv/
+ad_intention_new/
+env.bak/
+venv.bak/
+*.env
+
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Streamlit
+.streamlit/
+
+# Test files
+test_*.csv
+classified_*.csv
+*_test*.csv
+*_results*.csv
+test_*.py
+!tests/test_*.py
+
+# Lock files
+uv.lock
+
+# Ignore specific files not needed in the repo
+check_vader.py
+debug_with_file.py
+test_fix_validation.py
+test_standalone.py
